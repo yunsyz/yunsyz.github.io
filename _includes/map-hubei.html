@@ -1,0 +1,146 @@
+<html>
+  <head> 
+  <title>湖北地图</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="cache-control" content="no-cache">
+	<meta http-equiv="expires" content="0">    
+	<meta http-equiv="keywords" content="hubei,map">
+	<meta http-equiv="description" content="This is a map of hubei.">
+	<script type="text/javascript" src="/resources/js/jquery-1.7.js"></script>
+	<script type="text/javascript" src="/resources/js/raphael.js"></script>
+	<script type="text/javascript" src="/resources/js/hubei.js"></script>
+	<style type="text/css">
+	#tip{position:absolute; width:145px; border:1px solid #d3d3d3; background:#fff;display:none;-moz-border-radius:5px; -webkit-border-radius:5px; overflow:hidden; border-radius:5px;-moz-box-shadow:1px 1px 2px rgba(0,0,0,.2); -webkit-box-shadow:1px 1px 2px rgba(0,0,0,.2); box-shadow:1px 1px 2px rgba(0,0,0,.2);}
+	#tip h4{height:18px; line-height:18px;margin:1px; padding-left:1px; background:#f0f0f0}
+	#tip p{line-height:14px;}
+	</style>
+	<script type="text/javascript">
+	$(function(){
+		loadMap("-1");
+	});
+	function loadMap(mapId) {
+		$("#map").html("");//清空
+		$("#tip").html("");//清空
+		var mapjson = {};
+		$.ajax({
+			url:"/resources/js/hubei.json",
+			dataType:"json",
+			async:false,
+			cache:false,
+			success:function(json){
+				mapjson = json;
+			}
+		});
+		var mj = mapjson[mapId];
+		if(!mj){//不存在，则返回
+			return;
+		}
+		var R = Raphael("map", 350, 220);
+		//调用绘制地图方法
+	    paintMap(R,mj.areaids,mj.childNums,mj.areanames,mj.attrs,mj.pathdata);
+	    var textAttr = {
+			"fill":'#000',
+			"font-size":"10px",
+			"cursor":"pointer"
+		};
+	    for (var state in china) {
+	        (function (st, state) {
+				//获取当前图形的中心坐标
+	            var xx = st.getBBox().x + (st.getBBox().width / 2);
+	            var yy = st.getBBox().y + (st.getBBox().height / 2);
+	            //***修改部分地图文字偏移坐标
+	            switch (china[state]['name']) {
+	            	case "荆州":
+                    	xx += 5;
+                    	yy += 5;
+                    break;
+	            	case "竹山县":
+                    	xx += 9;
+                    	yy -= 27;
+                    break;
+	            	case "襄州区":
+	            		xx += 5;
+	            		yy -= 13;
+	            	break;
+	            	case "鄂城区":
+	            		xx += 15;
+	            		yy += 13;
+	            	break;
+	            	case "监利县":
+	            		xx += 1;
+	            		yy -= 18;
+	            	break;
+	            	case "洪湖市":
+	            		xx -= 15;
+	            		yy -= 12;
+	            	break;
+                    default:
+	            }
+				//写入文字
+				china[state]['text'] = R.text(xx, yy, china[state]['name']).attr(textAttr);
+				var xOffset = -10;//横向偏移值
+				var yOffset = -10;//纵向偏移值
+				st.hover(function(e){
+					st.animate({fill: "#A0BD2B", stroke: "#eee"}, 500);
+					R.safari();				
+					$("#tip").css({"top":(e.clientY-xOffset)+"px","left":(e.clientX-yOffset)+"px"}).fadeIn("fast").html("<div class=''><h4>"+china[state]['name']+"</h4><p>"+china[state].areaid+"</p></div>");
+				},function(){
+					st.animate({fill: china[state].fillColor, stroke: "#eee"}, 500);
+	                R.safari();
+					$("#tip").hide();
+				});
+				
+				st.mousemove(function(e){
+					$("#tip").css({"top":(e.clientY-xOffset)+"px","left":(e.clientX-yOffset)+"px"});
+					R.safari();
+				});
+				
+				st.click(function(e){
+					updatesubmap(china[state].childNum,china[state].areaid);
+				});
+				
+				var word = china[state]['text'];
+				word.hover(function(e){
+					st.animate({fill: "#A0BD2B", stroke: "#eee"}, 500);
+					R.safari();				
+					$("#tip").css({"top":(e.clientY-xOffset)+"px","left":(e.pageX-yOffset)+"px"}).fadeIn("fast").html("<div class=''><h4>"+china[state]['name']+"</h4><p>"+china[state].areaid+"</p></div>");
+				},function(){
+					st.animate({fill: china[state].fillColor, stroke: "#eee"}, 500);
+	                R.safari();
+					$("#tip").hide();
+				});
+				word.mousemove(function(e){
+					$("#tip").css({"top":(e.clientY-xOffset)+"px","left":(e.clientX-yOffset)+"px"});
+					R.safari();
+				});
+				word.click(function(e){
+					updatesubmap(china[state].childNum,china[state].areaid);
+				});
+				
+						
+	         })(china[state].path, state);
+	    }
+	};
+	function updatesubmap(childNum,areaid){
+		//更新地图
+		if (childNum > 1) {
+    		loadMap(areaid);
+		}else {
+			//alert("没有更细的地图啦！");
+		}
+	}
+	function toPro(){
+		loadMap("-1");
+	}
+	</script>
+  </head>
+  
+  <body>
+    <input type="button" value="全省地图" onclick="toPro();">
+    <div style="background:#fff;">
+    	<div id="map" style="margin-left:300px;"></div>
+    	<div id="tip"></div>
+    </div>
+  </body>
+</html>

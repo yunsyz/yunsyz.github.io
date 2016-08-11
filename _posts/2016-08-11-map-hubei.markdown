@@ -1,0 +1,8 @@
+---
+layout: post
+title:  "map hubei"
+date:   2016-08-11 14:12:02 +0800
+categories: map
+---
+湖北省地图。所用技术主要是用jquery,raphael这两种开源js，数据是用的json格式。
+{% include map-hubei.html %}
